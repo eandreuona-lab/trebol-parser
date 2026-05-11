@@ -1,7 +1,9 @@
 from fastapi import FastAPI
 from pydantic import BaseModel
-from typing import Optional
 import re
+from typing import Optional
+import os
+import uvicorn
 
 app = FastAPI(title="Factura Parser API")
 
@@ -23,11 +25,9 @@ def parse_invoice(req: ParseRequest):
     cliente = _search(r"Cliente:\s*(.+?)\s*CUPS:", t, flags=re.DOTALL)
     cups = _search(r"CUPS:\s*([A-Z0-9]+)", t)
     cif = _search(r"CIF:\s*([A-Z0-9]+)", t)
-
     fecha_factura = _search(r"Fecha de factura:\s*([0-9./-]+)", t)
     fecha_inicio = _search(r"Fecha Inicio:\s*([0-9./-]+)", t)
     fecha_fin = _search(r"Fecha Fin:\s*([0-9./-]+)", t)
-
     tarifa_acceso = _search(r"Tarifa de Acceso:\s*([0-9A-Z.]+)", t)
     atr_directo = _search(r"ATR Directo:\s*(SI|NO)", t)
     numero_factura = _search(r"Número de factura:\s*([A-Z0-9-]+)", t)
@@ -51,3 +51,7 @@ def parse_invoice(req: ParseRequest):
         "tarifa_acceso": tarifa_acceso,
         "atr_directo": atr_directo
     }
+
+if __name__ == "__main__":
+    port = int(os.environ.get("PORT", 8000))
+    uvicorn.run(app, host="0.0.0.0", port=port)
