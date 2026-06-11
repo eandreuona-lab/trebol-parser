@@ -73,10 +73,10 @@ def parse_iberdrola(req: ParseRequest):
     t = req.text
 
     proveedor = "IBERDROLA CLIENTES, S.A.U." if "IBERDROLA CLIENTES" in t.upper() else None
-    tipo_documento = "FACTURA DE ELECTRICIDAD" if "FACTURA DE ELECTRICIDAD" in t.upper() else None
+ tipo_documento = "FACTURA DE ELECTRICIDAD" if "FACTURA DE" in t and "ELECTRICIDAD" in t else None
 
     numero_factura = _search(r"Número de factura\s+([0-9]+)", t, flags=re.IGNORECASE)
-    fecha_emision = _search(r"Fecha de emisión de factura\s+(.+)", t, flags=re.IGNORECASE)
+    fecha_emision = _search(r"Fecha de emisión de factura\s+(.+?)\s+Fecha prevista", t, flags=re.IGNORECASE)
     fecha_cargo = _search(r"Fecha prevista de cargo\s+([0-9/]+)", t, flags=re.IGNORECASE)
     periodo_desde = _search(r"Periodo de facturación\s+([0-9/]+)\s*-\s*[0-9/]+", t, flags=re.IGNORECASE)
     periodo_hasta = _search(r"Periodo de facturación\s+[0-9/]+\s*-\s*([0-9/]+)", t, flags=re.IGNORECASE)
@@ -84,13 +84,13 @@ def parse_iberdrola(req: ParseRequest):
     titular = _search(r"Titular\s+(.+)", t, flags=re.IGNORECASE)
     cif_titular = _search(r"CIF titular\s+([A-Z0-9]+)", t, flags=re.IGNORECASE)
     referencia_contrato = _search(r"Referencia contrato suministro[:\s]+([0-9]+)", t, flags=re.IGNORECASE)
-    cups = _search(r"Identificación punto de suministro \(CUPS\):\s*(ES[ A-Z0-9]+)", t, flags=re.IGNORECASE)
+    cups = _search(r"Identificación punto de suministro \(CUPS\):\s*(ES[\s A-Z0-9]{15,25}?)(?:\s{2,}|\s*Forma)", t, flags=re.IGNORECASE)
     direccion_suministro = _search(r"Dirección de suministro:\s*(.+)", t, flags=re.IGNORECASE)
 
     energia_total_eur = _to_float_es(_search(r"TOTAL ENERGÍA\s+([0-9\.,]+)\s*€", t, flags=re.IGNORECASE))
     servicios_otros_eur = _to_float_es(_search(r"TOTAL SERVICIOS Y OTROS CONCEPTOS\s+([0-9\.,]+)\s*€", t, flags=re.IGNORECASE))
     base_imponible_eur = _to_float_es(_search(r"IMPORTE TOTAL\s+([0-9\.,]+)\s*€", t, flags=re.IGNORECASE))
-    iva_eur = _to_float_es(_search(r"IVA\s+21%\s+s/[0-9\.,]+\s+€?\s*([0-9\.,]+)\s*€", t, flags=re.IGNORECASE))
+    iva_eur = _to_float_es(_search(r"IVA\s+21%\s+s/[\d\.,]+\s+([\d\.,]+)\s*€", t, flags=re.IGNORECASE))
     total_factura_eur = _to_float_es(_search(r"TOTAL IMPORTE FACTURA[:\s]+([0-9\.,]+)\s*€", t, flags=re.IGNORECASE))
 
     kwh_total = _to_float_es(_search(r"Total\s+([0-9\.,]+)\s*kWh", t, flags=re.IGNORECASE))
